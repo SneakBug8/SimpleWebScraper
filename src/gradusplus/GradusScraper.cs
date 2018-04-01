@@ -64,7 +64,6 @@ namespace webscraper.gradusplus
             var xmlDoc = new XmlDocument();
             xmlDoc.Load(url);
 
-            TotalPages = xmlDoc["urlset"].ChildNodes.Count;
 
             web = new HtmlWeb();
 
@@ -80,6 +79,8 @@ namespace webscraper.gradusplus
 
                 UrlsToParse.Add(node["loc"].InnerText);
             }
+
+            TotalPages =  UrlsToParse.Count;
 
             Console.WriteLine("Will parse " + UrlsToParse.Count + " pages");
         }
