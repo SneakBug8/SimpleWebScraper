@@ -9,7 +9,7 @@ using HtmlAgilityPack;
 using CsvHelper;
 using System.IO;
 
-namespace webscraper
+namespace webscraper.galser
 {
     public class Scraper
     {
@@ -25,8 +25,7 @@ namespace webscraper
             while (UrlsToParse.Count > 0) { }
             await Task.Delay(5000);
             EndParsing();
-            Console.WriteLine((DateTime.Now - starttime).TotalMinutes);
-            System.IO.File.WriteAllText(@"C:\Users\sneak\Documents\time.json", (DateTime.Now - starttime).TotalMinutes.ToString());
+            Console.WriteLine("Scraping took " + (DateTime.Now - starttime).TotalMinutes + " minutes.");
         }
 
         async void StartThreads()
@@ -140,7 +139,9 @@ namespace webscraper
 
         void EndParsing()
         {
+            Console.WriteLine("Please, write path to datafile, including .csv");
             var csv = new CsvWriter(new System.IO.StreamWriter(Console.ReadLine()));
+            csv.Configuration.Delimiter = ";";
             csv.WriteRecords(Products);
         }
 
