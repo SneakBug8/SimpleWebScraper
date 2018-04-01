@@ -118,7 +118,7 @@ namespace webscraper
                     }
                 } */
                 Products.Add(product);
-                Console.WriteLine(Products.Count + " - " + product.Name);
+                Console.WriteLine(Products.Count + " - " + product._NAME_);
             }
             catch (Exception e)
             {
@@ -131,7 +131,7 @@ namespace webscraper
         void ParseNonActiveProduct(string url)
         {
             var product = new Product();
-            product.Available = false;
+            product._STATUS_ = 0;
             Products.Add(product);
         }
 
