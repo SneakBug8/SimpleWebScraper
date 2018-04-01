@@ -64,18 +64,24 @@ namespace webscraper.gradusplus
             var xmlDoc = new XmlDocument();
             xmlDoc.Load(url);
 
-            Console.WriteLine("Will parse " + xmlDoc["urlset"].ChildNodes.Count + " pages");
             TotalPages = xmlDoc["urlset"].ChildNodes.Count;
 
             web = new HtmlWeb();
 
             Console.WriteLine("Started scraping");
 
-            for (int i = 0; i < xmlDoc["urlset"].ChildNodes.Count; i++)
-            {
-                var node = xmlDoc["urlset"].ChildNodes[i];
+            bool skippedfirst = false;
+
+            foreach (XmlNode node in xmlDoc["urlset"].ChildNodes) {
+                if (!skippedfirst) {
+                    skippedfirst = true;
+                    continue;
+                }
+
                 UrlsToParse.Add(node["loc"].InnerText);
             }
+
+            Console.WriteLine("Will parse " + UrlsToParse.Count + " pages");
         }
 
         public void Parse(HtmlDocument document, string url)
@@ -104,7 +110,7 @@ namespace webscraper.gradusplus
             product._STATUS_ = Convert.ToInt16(document.DocumentNode.SelectSingleNode("//div[@class='prod-stock']").InnerHtml == "Есть в наличии");
 
             product._MODEL_ = document.DocumentNode
-            .SelectSingleNode("//div[@class='product-section'/span[1]").InnerText;
+            .SelectSingleNode("//div[@class='product-section']/span[1]").InnerText;
 
             Products.Add(product);
             Console.WriteLine(Products.Count + " - " + product._NAME_);
