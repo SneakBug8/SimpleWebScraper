@@ -15,16 +15,17 @@ namespace webscraper.gradusplus
     {
         List<Product> Products = new List<Product>();
         List<string> UrlsToParse = new List<string>();
+        int TotalPages;
+        int ListedPages;
         public async void Work()
         {
             var starttime = DateTime.Now;
             RequestThroughXml("http://gradys-plus.ru/sitemap.xml");
             StartThreads();
 
-            while (UrlsToParse.Count > 0) { }
-            await Task.Delay(5000);
-            EndParsing();
+            while (ListedPages != TotalPages) { }
             Console.WriteLine("Scraping took " + (DateTime.Now - starttime).TotalMinutes + " minutes.");
+            EndParsing();
         }
 
         async void StartThreads()
@@ -64,6 +65,7 @@ namespace webscraper.gradusplus
             xmlDoc.Load(url);
 
             Console.WriteLine("Will parse " + xmlDoc["urlset"].ChildNodes.Count + " pages");
+            TotalPages = xmlDoc["urlset"].ChildNodes.Count;
 
             web = new HtmlWeb();
 
@@ -82,6 +84,8 @@ namespace webscraper.gradusplus
             {
                 ParseProduct(document);
             }
+
+            ListedPages++;
         }
 
         void ParseProduct(HtmlDocument document)

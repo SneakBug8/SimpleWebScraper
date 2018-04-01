@@ -15,6 +15,8 @@ namespace webscraper.galser
     {
         List<Product> Products = new List<Product>();
         List<string> UrlsToParse = new List<string>();
+        int TotalPages;
+        int ListedPages;
         public async void Work()
         {
             var starttime = DateTime.Now;
@@ -22,10 +24,9 @@ namespace webscraper.galser
             // RequestThroughXml("https://www.verybest.ru/sitemap_iblock_19.xml");
             StartThreads();
 
-            while (UrlsToParse.Count > 0) { }
-            await Task.Delay(5000);
-            EndParsing();
+            while (ListedPages != TotalPages) { }
             Console.WriteLine("Scraping took " + (DateTime.Now - starttime).TotalMinutes + " minutes.");
+            EndParsing();
         }
 
         async void StartThreads()
@@ -45,6 +46,8 @@ namespace webscraper.galser
             Console.WriteLine(xmlDoc["urlset"].ChildNodes.Count);
 
             web = new HtmlWeb();
+
+            TotalPages = xmlDoc["urlset"].ChildNodes.Count;
 
             foreach (XmlNode node in xmlDoc["urlset"].ChildNodes)
             {
@@ -77,6 +80,8 @@ namespace webscraper.galser
             {
                 Parse(doc, url);
             }
+
+            ListedPages++;
         }
 
         public void Parse(HtmlDocument document, string url)
