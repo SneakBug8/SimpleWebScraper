@@ -14,15 +14,29 @@ namespace webscraper
     {
         Dictionary<string, Product> Products = new Dictionary<string, Product>();
         List<string> Urls404 = new List<string>();
-        public void Work()
+
+        List<string> UrlsToParse = new List<string>();
+        public async void Work()
         {
             var starttime = DateTime.Now;
             RequestThroughXml("https://www.verybest.ru/sitemap_iblock_12.xml");
             // RequestThroughXml("https://www.verybest.ru/sitemap_iblock_19.xml");
+            StartThreads();
 
+            while (UrlsToParse.Count > 0) { }
+            await Task.Delay(5000);
             EndParsing();
             Console.WriteLine((DateTime.Now - starttime).TotalMinutes);
             System.IO.File.WriteAllText(@"C:\Users\sneak\Documents\time.json", (DateTime.Now - starttime).TotalMinutes.ToString());
+        }
+
+        async void StartThreads()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                ThreadPool.QueueUserWorkItem(AutoRequest);
+                await Task.Delay(100);
+            }
         }
 
         async void RequestThroughXml(string url)
@@ -36,7 +50,20 @@ namespace webscraper
 
             foreach (XmlNode node in xmlDoc["urlset"].ChildNodes)
             {
-                Request(node["loc"].InnerText);
+                UrlsToParse.Add(node["loc"].InnerText);
+            }
+        }
+
+
+        void AutoRequest(object sender)
+        {
+            if (UrlsToParse.Count > 0)
+            {
+                var url = UrlsToParse.First();
+                UrlsToParse.RemoveAt(0);
+
+                Request(url);
+                ThreadPool.QueueUserWorkItem(AutoRequest);
             }
         }
 
@@ -45,7 +72,7 @@ namespace webscraper
         public void Request(string url)
         {
             Console.WriteLine("Parsing page " + url);
-            
+
             var doc = web.Load(url);
 
             if (url.Contains("/catalog/") && url.Count(x => x == '/') == 6)
@@ -65,7 +92,8 @@ namespace webscraper
             ParseProduct(document);
         }
 
-        void ParseProduct(HtmlDocument document) {
+        void ParseProduct(HtmlDocument document)
+        {
             try
             {
 
@@ -86,7 +114,8 @@ namespace webscraper
             }
         }
 
-        void ParseNonActiveProduct(string url) {
+        void ParseNonActiveProduct(string url)
+        {
             Console.WriteLine(Urls404.Count + " - " + url);
             Urls404.Add(url);
         }
