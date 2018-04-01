@@ -101,50 +101,57 @@ namespace webscraper
                 var product = new Product();
                 var coststring = document.DocumentNode.SelectNodes("//div/div[@class='rub actual']").Single().InnerText;
                 coststring = coststring.Replace(" ", "");
-                Console.WriteLine(coststring);
-                product.Cost = coststring;
-                product.Name = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
-                product.Available = document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null;
+                product._PRICE_ = coststring;
+                product._NAME_ = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
+                product._NAME_ = product._NAME_.Replace("&quot;", "''");
+                product._STATUS_ = Convert.ToInt16(document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null);
 
-                product.VendorCode = document.DocumentNode
-                .SelectNodes("//table[@class='characteristic']/tbody/tr/td").First().InnerText;
+                product._MODEL_ = document.DocumentNode
+                .SelectNodes("//tr/td[../th='Артикул']").First().InnerText;
 
-                var image = document.DocumentNode.SelectNodes("//a[@class='img modal-open']/image").Single();
+                /* var image = document.DocumentNode.SelectSingleNode("//a[@class='img modal-open']/img");
                 if (image != null)
                 {
                     var imageurl = image.GetAttributeValue("src", null);
                     if (imageurl != null)
                     {
-                        ThreadPool.QueueUserWorkItem((obj) => DownloadImage(imageurl, product.Name + ".jpg"));
+                        ThreadPool.QueueUserWorkItem((obj) => DownloadImage(imageurl, product.VendorCode + ".jpg"));
                     }
-                }
+                } */
                 Products.Add(product);
-                Console.WriteLine(Products.Count + " - " + product.Name);
+                Console.WriteLine(Products.Count + " - " + product._NAME_);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message + ": " + e.StackTrace);
+                Console.WriteLine(document.DocumentNode.InnerHtml);
+                
             }
         }
 
         void ParseNonActiveProduct(string url)
         {
-            var product = new Product();
-            product.Available = false;
+            /*var product = new Product();
+            product._STATUS_ = 0;
             Products.Add(product);
+            Console.WriteLine(Products.Count + " - " + url);   */         
         }
 
 
         void EndParsing()
         {
-            var csv = new CsvWriter(new System.IO.StreamWriter(@"C:\Users\sneak\Documents\result.csv"));
+            var csv = new CsvWriter(new System.IO.StreamWriter(Console.ReadLine()));
             csv.WriteRecords(Products);
         }
 
         public void DownloadImage(string url, string name)
         {
+            name = name.Replace("&", "");
+            name = name.Replace("-", "");
+            name = name.Replace(";", "");
+            
             string localFilename = @"C:\Users\sneak\Pictures\images\" + name;
-            url = "https:" + url;
+            url = "https://www.verybest.ru" + url;
             Console.WriteLine("Downloading image " + name + " from " + url);
             using (WebClient client = new WebClient())
             {
