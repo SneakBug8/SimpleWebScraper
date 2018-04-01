@@ -101,22 +101,22 @@ namespace webscraper
                 var product = new Product();
                 var coststring = document.DocumentNode.SelectNodes("//div/div[@class='rub actual']").Single().InnerText;
                 coststring = coststring.Replace(" ", "");
-                product.Cost = coststring;
-                product.Name = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
-                product.Available = document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null;
+                product._PRICE_ = coststring;
+                product._NAME_ = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
+                product._STATUS_ = Convert.ToInt16(document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null);
 
-                product.VendorCode = document.DocumentNode
+                product._MODEL_ = document.DocumentNode
                 .SelectNodes("//tr/td[../th='Артикул']").First().InnerText;
 
-                var image = document.DocumentNode.SelectSingleNode("//a[@class='img modal-open']/img");
+                /* var image = document.DocumentNode.SelectSingleNode("//a[@class='img modal-open']/img");
                 if (image != null)
                 {
                     var imageurl = image.GetAttributeValue("src", null);
                     if (imageurl != null)
                     {
-                        ThreadPool.QueueUserWorkItem((obj) => DownloadImage(imageurl, product.Name + ".jpg"));
+                        ThreadPool.QueueUserWorkItem((obj) => DownloadImage(imageurl, product.VendorCode + ".jpg"));
                     }
-                }
+                } */
                 Products.Add(product);
                 Console.WriteLine(Products.Count + " - " + product.Name);
             }
@@ -144,6 +144,10 @@ namespace webscraper
 
         public void DownloadImage(string url, string name)
         {
+            name = name.Replace("&", "");
+            name = name.Replace("-", "");
+            name = name.Replace(";", "");
+            
             string localFilename = @"C:\Users\sneak\Pictures\images\" + name;
             url = "https://www.verybest.ru" + url;
             Console.WriteLine("Downloading image " + name + " from " + url);

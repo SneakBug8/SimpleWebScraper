@@ -1,8 +1,8 @@
 namespace webscraper {
     public class Product {
-        public string Name;
-        public string Cost;
-        public string VendorCode;
-        public bool Available;
+        public string _MODEL_;
+        public string _PRICE_;
+        public string _NAME_;
+        public int _STATUS_;
     }
 }
