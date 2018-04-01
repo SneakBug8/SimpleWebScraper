@@ -101,15 +101,14 @@ namespace webscraper
                 var product = new Product();
                 var coststring = document.DocumentNode.SelectNodes("//div/div[@class='rub actual']").Single().InnerText;
                 coststring = coststring.Replace(" ", "");
-                Console.WriteLine(coststring);
                 product.Cost = coststring;
                 product.Name = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
                 product.Available = document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null;
 
                 product.VendorCode = document.DocumentNode
-                .SelectNodes("//table[@class='characteristic']/tbody/tr/td").First().InnerText;
+                .SelectNodes("//tr/td[../th='Артикул']").First().InnerText;
 
-                var image = document.DocumentNode.SelectNodes("//a[@class='img modal-open']/image").Single();
+                var image = document.DocumentNode.SelectSingleNode("//a[@class='img modal-open']/img");
                 if (image != null)
                 {
                     var imageurl = image.GetAttributeValue("src", null);
@@ -124,6 +123,8 @@ namespace webscraper
             catch (Exception e)
             {
                 Console.WriteLine(e.Message + ": " + e.StackTrace);
+                Console.WriteLine(document.DocumentNode.InnerHtml);
+                
             }
         }
 
@@ -144,7 +145,7 @@ namespace webscraper
         public void DownloadImage(string url, string name)
         {
             string localFilename = @"C:\Users\sneak\Pictures\images\" + name;
-            url = "https:" + url;
+            url = "https://www.verybest.ru" + url;
             Console.WriteLine("Downloading image " + name + " from " + url);
             using (WebClient client = new WebClient())
             {
