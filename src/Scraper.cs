@@ -103,6 +103,7 @@ namespace webscraper
                 coststring = coststring.Replace(" ", "");
                 product._PRICE_ = coststring;
                 product._NAME_ = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
+                product._NAME_ = product._NAME_.Replace("&quot;", "''");
                 product._STATUS_ = Convert.ToInt16(document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null);
 
                 product._MODEL_ = document.DocumentNode
@@ -130,15 +131,16 @@ namespace webscraper
 
         void ParseNonActiveProduct(string url)
         {
-            var product = new Product();
+            /*var product = new Product();
             product._STATUS_ = 0;
             Products.Add(product);
+            Console.WriteLine(Products.Count + " - " + url);   */         
         }
 
 
         void EndParsing()
         {
-            var csv = new CsvWriter(new System.IO.StreamWriter(@"C:\Users\sneak\Documents\result.csv"));
+            var csv = new CsvWriter(new System.IO.StreamWriter(Console.ReadLine()));
             csv.WriteRecords(Products);
         }
 
