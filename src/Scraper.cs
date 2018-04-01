@@ -2,119 +2,111 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 
 namespace webscraper
 {
     public class Scraper
     {
-        readonly string BaseUrl = "https://www.furaffinity.net/view/{0}/";
-
-        public async void Work()
+        Dictionary<string, Product> Products = new Dictionary<string, Product>();
+        List<string> Urls404 = new List<string>();
+        public void Work()
         {
-            int i = 1;
-            int q = 0;
-            DateTime startTime = DateTime.Now;
-            while (true)
+            var starttime = DateTime.Now;
+            RequestThroughXml("https://www.verybest.ru/sitemap_iblock_12.xml");
+            // RequestThroughXml("https://www.verybest.ru/sitemap_iblock_19.xml");
+
+            EndParsing();
+            Console.WriteLine((DateTime.Now - starttime).TotalMinutes);
+            System.IO.File.WriteAllText(@"C:\Users\sneak\Documents\time.json", (DateTime.Now - starttime).TotalMinutes.ToString());
+        }
+
+        async void RequestThroughXml(string url)
+        {
+            var xmlDoc = new XmlDocument();
+            xmlDoc.Load(url);
+
+            Console.WriteLine(xmlDoc["urlset"].ChildNodes.Count);
+
+            web = new HtmlWeb();
+
+            foreach (XmlNode node in xmlDoc["urlset"].ChildNodes)
             {
-
-                if (q == 0)
-                {
-                    startTime = DateTime.Now;
-                }
-                i++;
-                q++;
-
-                Request(string.Format(BaseUrl, i.ToString()));
-                // await Task.Delay(300);
-
-                if (q >= 100)
-                {
-                    var requesttime = DateTime.Now - startTime;
-                    Console.WriteLine(requesttime.TotalSeconds + " per 100 requests.");
-                    q = 0;
-                    break;
-                }
+                Request(node["loc"].InnerText);
             }
         }
+
+        HtmlWeb web;
 
         public void Request(string url)
         {
-            var web = new HtmlWeb();
-            web.PreRequest = OnPreRequest;
+            Console.WriteLine("Parsing page " + url);
+            
             var doc = web.Load(url);
 
-            Console.WriteLine("Parsing page " + url);
-            Parse(doc);
-        }
-
-        public bool OnPreRequest(HttpWebRequest request)
-        {
-
-            var CookieContainer = new CookieContainer();
-            var cookiea = new Cookie();
-            cookiea.Name = "a";
-            cookiea.Value = "977435ee-b239-4962-a9fe-65f708baad9f";
-            var cookieb = new Cookie();
-            cookieb.Name = "b";
-            cookieb.Value = "1905be73-6085-4e04-a98a-d8bd1c7b23b6";
-            CookieContainer.Add(new Uri("https://www.furaffinity.net"), cookiea);
-            CookieContainer.Add(new Uri("https://www.furaffinity.net"), cookieb);
-            request.CookieContainer = CookieContainer;
-            return true;
-        }
-
-        public void Parse(HtmlDocument document)
-        {
-            var tagsnodes = document.DocumentNode.SelectNodes("//div/span[@class='tags']");
-            var tags = new List<string>();
-
-            if (tagsnodes != null)
+            if (url.Contains("/catalog/") && url.Count(x => x == '/') == 6)
             {
-                tags = (from i in tagsnodes.ToList()
-                        select i.InnerText).ToList();
+                Parse(doc, url);
             }
-            else
+        }
+
+        public void Parse(HtmlDocument document, string url)
+        {
+            if (document.DocumentNode.SelectNodes("//section[@class='not-found']") != null)
             {
-                Console.WriteLine("Tags:");
+                ParseNonActiveProduct(url);
                 return;
             }
 
-            // Console.WriteLine(document.DocumentNode.InnerHtml);
-
-            Console.Write("Tags:");
-            foreach (var tag in tags)
-            {
-                Console.Write(tag + ", ");
-            }
-
-            Console.WriteLine();
-
-
-            if (tags.Contains("background") && tags.Contains("space"))
-            {
-                var image = document.GetElementbyId("submissionImg");
-                var imageurl = image.GetAttributeValue("src", null);
-
-                if (imageurl != null)
-                {
-                    DownloadImage(imageurl, image.GetAttributeValue("alt", "new") + ".jpg");
-                }
-            }
-
+            ParseProduct(document);
         }
 
-        public void DownloadImage(string url, string name)
-        {
-            string localFilename = @"C:\Users\sneak\Pictures\space\" + name;
-            url = "https:" + url;
-            Console.WriteLine("Downloading image " + name);
-            Console.WriteLine(url);
-            using (WebClient client = new WebClient())
+        void ParseProduct(HtmlDocument document) {
+            try
             {
-                client.DownloadFile(new Uri(url), localFilename);
+
+                var product = new Product();
+                product.Cost = document.DocumentNode.SelectNodes("//div/div[@class='rub actual']").Single().InnerText; ;
+                product.Name = document.DocumentNode.SelectNodes("//header/h1[@class='accent']").Single().InnerText;
+                product.Available = document.DocumentNode.SelectNodes("//div[@class='block_buy']/div[@class='presence yes sprite accent']") != null;
+
+                if (!Products.ContainsKey(product.Name))
+                {
+                    Products.Add(product.Name, product);
+                    Console.WriteLine(Products.Count + " - " + product.Name);
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+        }
+
+        void ParseNonActiveProduct(string url) {
+            Console.WriteLine(Urls404.Count + " - " + url);
+            Urls404.Add(url);
+        }
+
+
+        void EndParsing()
+        {
+            var list = new List<Product>();
+
+            foreach (var keyvalue in Products)
+            {
+                list.Add(keyvalue.Value);
+            }
+
+            var res = JsonConvert.SerializeObject(list);
+
+            System.IO.File.WriteAllText(@"C:\Users\sneak\Documents\products.json", res);
+
+            res = JsonConvert.SerializeObject(Urls404);
+            System.IO.File.WriteAllText(@"C:\Users\sneak\Documents\404.json", res);
         }
     }
 }
