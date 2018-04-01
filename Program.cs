@@ -23,6 +23,10 @@ namespace webscraper
                 var Scraper = new gradusplus.Scraper();
                 Scraper.Work();
             }
+
+            while (true) {
+                
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ namespace webscraper.gradusplus
             StartThreads();
 
             while (ListedPages != TotalPages) { }
+
             Console.WriteLine("Scraping took " + (DateTime.Now - starttime).TotalMinutes + " minutes.");
             EndParsing();
         }
@@ -111,7 +112,7 @@ namespace webscraper.gradusplus
             product._STATUS_ = Convert.ToInt16(document.DocumentNode.SelectSingleNode("//div[@class='prod-stock']").InnerHtml == "Есть в наличии");
 
             product._MODEL_ = document.DocumentNode
-            .SelectSingleNode("//div[@class='product-section']/span[1]").InnerText;
+            .SelectSingleNode("//div[@class='product-section']/a")?.InnerText;
 
             Products.Add(product);
             Console.WriteLine(Products.Count + " - " + product._NAME_);
@@ -120,9 +121,16 @@ namespace webscraper.gradusplus
         void EndParsing()
         {
             Console.WriteLine("Please, write path to datafile, including .csv");
-            var csv = new CsvWriter(new System.IO.StreamWriter(Console.ReadLine()));
+            var command = Console.ReadLine();
+            var csv = new CsvWriter(new System.IO.StreamWriter(command));
             csv.Configuration.Delimiter = ";";
-            csv.WriteRecords(Products);
+            // csv.WriteRecords(Products);
+            foreach (var Product in Products) {
+                csv.WriteRecord(Product);
+            }
+
+            Console.WriteLine("-----");
+            Console.WriteLine("Success");
         }
     }
 }
